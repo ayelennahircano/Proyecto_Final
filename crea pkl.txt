@@ -1,0 +1,41 @@
+# Instalar dependencias
+!pip install ipywidgets scikit-learn --quiet
+
+# Importar librerías
+import pandas as pd
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
+import joblib
+from google.colab import drive, files
+import ipywidgets as widgets
+from IPython.display import display, clear_output
+from datetime import datetime
+
+# Montar Google Drive
+drive.mount('/content/drive')
+
+# Rutas
+ruta_dataset = "/content/drive/MyDrive/Trabajo_Final/data_actualizado.csv"
+ruta_modelo = "/content/drive/MyDrive/Trabajo_Final/rf_model.pkl"
+
+# Cargar dataset y limpieza
+df = pd.read_csv(ruta_dataset)
+df["Tipo_ladrillo"] = df["Tipo_ladrillo"].str.strip().str.lower()
+df["Espesor_muro"] = pd.to_numeric(df["Espesor_muro"], errors='coerce')
+df["Area_muro"] = df["Altura_muro"] * df["Ancho_muro"]
+print(df["Cantidad_ladrillos"].describe())
+
+# Entrenar modelo
+X = df[['Area_muro', 'Altura_muro', 'Ancho_muro', 'Espesor_muro', 'Tipo_ladrillo']]
+X = pd.get_dummies(X)
+columnas_entrenamiento = X.columns.tolist()
+y = df['Cantidad_ladrillos']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+modelo = RandomForestRegressor(n_estimators=1000, random_state=42)
+modelo.fit(X_train, y_train)
+
+# Guardar modelo y columnas
+joblib.dump((modelo, columnas_entrenamiento), ruta_modelo)
+print(f"✅ Score del modelo: {modelo.score(X_test, y_test):.2f}")
+print("✅ Modelo guardado en:", ruta_modelo)

@@ -1,0 +1,13 @@
+bcrypt
+xlsxwriter
+reportlab
+streamlit
+pandas
+matplotlib
+qrcode
+Pillow
+gspread
+oauth2client
+numpy
+requests
+beautifulsoup4
