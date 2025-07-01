@@ -2,15 +2,6 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
-# --- Encabezado de la app ---
-st.markdown("""
-    <div style="display: flex; gap: 20px; margin-bottom: 20px;">
-        <a href="/Corralones" target="_self">Corralones</a>
-        <a href="/panel_de_usuario" target="_self">Panel de usuario</a>
-        <a href="/registro_obra" target="_self">Registro de obra</a>
-        <a href="/predictor" target="_self">Cálculo de materiales</a>
-    </div>
-""", unsafe_allow_html=True)
 
 st.title("CIMIENTO FUTURO\n\n")
 st.set_page_config(page_title="Precios Corralones", layout="wide")
