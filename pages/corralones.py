@@ -8,7 +8,7 @@ st.set_page_config(page_title="Precios Corralones", layout="wide")
 st.subheader("Comparador de Precios - Corralones")
 
 if st.session_state.get("logueado"):
-    if st.button("🚪 Cerrar sesión"):
+    if st.button("Cerrar sesión"):
         st.session_state.clear()
         st.query_params["page"] = "cuenta.py"
         st.rerun()
