@@ -7,94 +7,87 @@ st.set_page_config(page_title="Precios Corralones", layout="wide")
 st.title("CIMIENTO FUTURO\n\n")
 st.subheader("Comparador de Precios - Corralones\n")
 
-# --- Verificar sesión ---
+# --- Cierre de sesión ---
 if st.session_state.get("logueado"):
     if st.button("Cerrar sesión"):
         st.session_state.clear()
         st.query_params["page"] = "cuenta.py"
         st.rerun()
 
-# ---------- PARÁMETROS ----------
-sitios_opciones = ["Easy", "ElAmigo", "Orlandisa"]
-sitios_seleccionados = st.sidebar.multiselect("Seleccioná los corralones", sitios_opciones, default=sitios_opciones)
-busqueda = st.sidebar.text_input("🔍 Buscar producto (ej: cemento, hierro)").strip().lower()
-
-# ---------- SCRAPERS ----------
-@st.cache_data(show_spinner="Cargando productos...")
-def scrappear_sitio(sitio, paginas=3):
+# --- Scraper con clases reales ---
+@st.cache_data
+def scrappear_actualizado():
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
     productos = []
-    headers = {"User-Agent": "Mozilla/5.0"}
 
-    if sitio == "Easy":
-        for p in range(1, paginas + 1):
-            url = f"https://www.easy.com.ar/construccion-y-maderas/obra-gruesa?page={p}"
-            r = requests.get(url, headers=headers)
-            soup = BeautifulSoup(r.text, "html.parser")
-            cards = soup.select("div.discoargentina-search-result-custom-1-x-galleryItem")
-            for card in cards:
-                nombre = card.select_one("span.vtex-product-summary-2-x-productBrand")
-                precio = card.select_one("span.vtex-product-price-1-x-sellingPriceValue")
-                if nombre and precio:
-                    productos.append({
-                        "Producto": nombre.text.strip(),
-                        "Precio": precio.text.strip(),
-                        "Tienda": "Easy"
-                    })
+    # Easy
+    try:
+        r = requests.get("https://www.easy.com.ar/construccion-y-maderas/obra-gruesa", headers=headers, timeout=10)
+        soup = BeautifulSoup(r.text, "html.parser")
+        cards = soup.select("div.vtex-product-summary-2-x-container")
+        for card in cards:
+            nombre = card.select_one("span.vtex-product-summary-2-x-productBrand")
+            precio = card.select_one("span.sellingPriceDivSearch")
+            if nombre and precio:
+                productos.append({
+                    "Producto": nombre.text.strip(),
+                    "Precio": precio.text.strip(),
+                    "Tienda": "Easy"
+                })
+    except Exception as e:
+        st.warning(f"❌ Error en Easy: {e}")
 
-    elif sitio == "ElAmigo":
-        for p in range(1, paginas + 1):
-            url = f"https://www.elamigo.com.ar/grueso?page={p}"
-            r = requests.get(url, headers=headers)
-            soup = BeautifulSoup(r.text, "html.parser")
-            cards = soup.select("div.vtex-product-summary-2-x-element")
-            for card in cards:
-                nombre = card.select_one("span.vtex-product-summary-2-x-productBrand")
-                precio = card.select_one("span.vtex-product-price-1-x-sellingPriceValue")
-                if nombre and precio:
-                    productos.append({
-                        "Producto": nombre.text.strip(),
-                        "Precio": precio.text.strip(),
-                        "Tienda": "ElAmigo"
-                    })
+    # El Amigo
+    try:
+        r = requests.get("https://www.elamigo.com.ar/grueso", headers=headers, timeout=10)
+        soup = BeautifulSoup(r.text, "html.parser")
+        cards = soup.select("div.vtex-product-summary-2-x-galleryItem")
+        for card in cards:
+            nombre = card.select_one("div.vtex-product-summary-2-x-nameContainer")
+            precio = card.select_one("span.vtex-product-price-1-x-currencyContainer")
+            if nombre and precio:
+                productos.append({
+                    "Producto": nombre.text.strip(),
+                    "Precio": precio.text.strip(),
+                    "Tienda": "ElAmigo"
+                })
+    except Exception as e:
+        st.warning(f"❌ Error en El Amigo: {e}")
 
-    elif sitio == "Orlandisa":
-        for p in range(1, paginas + 1):
-            url = f"https://www.orlandisa.com/ecommerce/corralon-130?page={p}"
-            r = requests.get(url, headers=headers)
-            soup = BeautifulSoup(r.text, "html.parser")
-            cards = soup.select("div.conten_producto")
-            for card in cards:
-                nombre = card.select_one("h2")
-                precio = card.select_one("span.precio")
-                if nombre and precio:
-                    productos.append({
-                        "Producto": nombre.text.strip(),
-                        "Precio": precio.text.strip(),
-                        "Tienda": "Orlandisa"
-                    })
+    # Orlandisa
+    try:
+        r = requests.get("https://www.orlandisa.com/ecommerce/corralon-130", headers=headers, timeout=10)
+        soup = BeautifulSoup(r.text, "html.parser")
+        cards = soup.select("div.conten_producto")
+        for card in cards:
+            nombre = card.select_one("div.nombre_producto")
+            precio = card.select_one("div.precio_producto")
+            if nombre and precio:
+                productos.append({
+                    "Producto": nombre.text.strip(),
+                    "Precio": precio.text.strip(),
+                    "Tienda": "Orlandisa"
+                })
+    except Exception as e:
+        st.warning(f"❌ Error en Orlandisa: {e}")
 
     return pd.DataFrame(productos)
 
-# ---------- CARGA MULTISITIO ----------
-dfs = [scrappear_sitio(sitio) for sitio in sitios_seleccionados]
-df_completo = pd.concat(dfs, ignore_index=True)
+# --- Ejecutar scraping ---
+df = scrappear_actualizado()
 
-# ---------- FILTROS ----------
-if df_completo.empty:
-    st.warning("⚠️ No se encontraron productos. Probá con otros sitios.")
+# --- Mostrar resultados ---
+if df.empty:
+    st.warning("⚠️ No se encontraron productos.")
 else:
-    # Filtro por palabra clave
-    if busqueda:
-        df_completo = df_completo[df_completo["Producto"].str.lower().str.contains(busqueda)]
+    tiendas = df["Tienda"].unique().tolist()
+    filtro = st.multiselect("Filtrar por tienda", tiendas, default=tiendas)
+    df = df[df["Tienda"].isin(filtro)]
 
-    # Filtro por tienda
-    tiendas_disponibles = df_completo["Tienda"].unique().tolist()
-    filtro = st.sidebar.multiselect("Filtrar por tienda", tiendas_disponibles, default=tiendas_disponibles)
-    df_filtrado = df_completo[df_completo["Tienda"].isin(filtro)]
+    st.success(f"✅ Se encontraron {len(df)} productos.")
+    st.dataframe(df)
 
-    st.success(f"✅ Se encontraron {len(df_filtrado)} productos.")
-    st.dataframe(df_filtrado)
-
-    # Botón de descarga
-    csv = df_filtrado.to_csv(index=False)
-    st.download_button("Descargar CSV", csv, "productos_combinados.csv", "text/csv")
+    csv = df.to_csv(index=False).encode("utf-8")
+    st.download_button("Descargar CSV", csv, "productos_corralones.csv", "text/csv")
