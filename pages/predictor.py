@@ -42,14 +42,9 @@ def descargar_modelo_drive(file_id):
 if not os.path.exists("rf_model.pkl"):
     descargar_modelo_drive("1ABCDEF1234567890") 
 
-modelo_cargado = joblib.load("rf_model.pkl")
-# Descargá si no existe
-
 if not os.path.exists("rf_model.pkl"):
-    descargar_modelo_drive("16r6vq-IAL0l1QVV8k4Z4w4wJe3h8ouOe")  # <-- Reemplazá con tu ID real
-'''if not os.path.exists("rf_model.pkl"):
     with zipfile.ZipFile("rf_model.zip", "r") as zip_ref:
-        zip_ref.extractall()'''
+        zip_ref.extractall()
 
 modelo_cargado = joblib.load("rf_model.pkl")
 if isinstance(modelo_cargado, tuple) and len(modelo_cargado) == 2:
