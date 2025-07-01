@@ -3,7 +3,12 @@ import pandas as pd
 import joblib
 import sqlite3
 import time
+import zipfile
 
+if not os.path.exists("rf_model.pkl"):
+    with zipfile.ZipFile("rf_model.zip", "r") as zip_ref:
+        zip_ref.extractall()
+        
 # --- Verificar sesión ---
 if "usuario" not in st.session_state:
     st.warning("⚠️ Debés iniciar sesión para usar esta página.")
