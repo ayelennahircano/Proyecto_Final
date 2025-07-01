@@ -33,26 +33,50 @@ with col2:
     st.markdown("</div>", unsafe_allow_html=True)
 
 # --- Cargar modelo ---
+# --- Descargar modelo desde Drive o ZIP ---
 @st.cache_data
-def descargar_modelo_drive(file_id):
-    url = f"https://drive.google.com/uc?id={file_id}"
-    response = requests.get(url)
-    with open("rf_model.pkl", "wb") as f:
-        f.write(response.content)
-if not os.path.exists("rf_model.pkl"):
-    descargar_modelo_drive("16r6vq-IAL0l1QVV8k4Z4w4wJe3h8ouOe") 
+def obtener_modelo_rf():
+    pkl_id = "16r6vq-IAL0l1QVV8k4Z4w4wJe3h8ouOe"  # ID real de rf_model.pkl
+    zip_id = "1bp40CPW6Pxp7_EXEDWGoO4G86goFwpfd"  # ⚠️ Reemplazalo por el ID real del ZIP si lo tenés
 
-if not os.path.exists("rf_model.pkl"):
-    with zipfile.ZipFile("rf_model.zip", "r") as zip_ref:
-        zip_ref.extractall()
+    # Paso 1: Descargar rf_model.pkl directamente
+    if not os.path.exists("rf_model.pkl"):
+        try:
+            url = f"https://drive.google.com/uc?id={pkl_id}&export=download"
+            r = requests.get(url, allow_redirects=True, timeout=10)
+            if r.ok and len(r.content) > 1000:
+                with open("rf_model.pkl", "wb") as f:
+                    f.write(r.content)
+        except Exception as e:
+            st.warning(f"Error al descargar rf_model.pkl: {e}")
 
-modelo_cargado = joblib.load("rf_model.pkl")
-if isinstance(modelo_cargado, tuple) and len(modelo_cargado) == 2:
-    modelo, columnas_entrenamiento = modelo_cargado
-else:
-    st.error("❌ Error al cargar el modelo. Asegurate de que 'rf_model.pkl' contiene modelo y columnas.")
+    # Paso 2: Si no existe, intentar ZIP
+    if not os.path.exists("rf_model.pkl") and not os.path.exists("rf_model.zip"):
+        try:
+            url = f"https://drive.google.com/uc?id={zip_id}&export=download"
+            r = requests.get(url, allow_redirects=True, timeout=15)
+            if r.ok and len(r.content) > 1000:
+                with open("rf_model.zip", "wb") as f:
+                    f.write(r.content)
+        except Exception as e:
+            st.warning(f"Error al descargar rf_model.zip: {e}")
+
+    # Paso 3: Descomprimir ZIP si fue descargado
+    if not os.path.exists("rf_model.pkl") and os.path.exists("rf_model.zip"):
+        try:
+            with zipfile.ZipFile("rf_model.zip", "r") as zip_ref:
+                zip_ref.extractall()
+        except Exception as e:
+            st.warning(f"Error al descomprimir ZIP: {e}")
+
+    return os.path.exists("rf_model.pkl")
+
+# Ejecutar descarga si es necesario
+modelo_listo = obtener_modelo_rf()
+if not modelo_listo:
+    st.error("❌ No se pudo cargar el modelo. Verificá la conexión o el ID del archivo.")
     st.stop()
-
+        
 # --- Parámetros ---
 mezclas = ["Cemento + Cal + Arena", "Cemento de Albañilería + Arena"]
 tipos_ladrillo = [
