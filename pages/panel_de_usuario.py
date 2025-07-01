@@ -60,13 +60,17 @@ obra = obras[obras["nombre_obra"] == obra_seleccionada].iloc[0]
 # --- Modificar stock ---
 st.markdown("### Modificar stock de materiales")
 
-nombres_materiales = {
+# Separar en dos grupos: ladrillos y materiales
+ladrillos = {
     "ladrillo_1": "Ladrillo común 5x12x26",
     "ladrillo_2": "Cerámico portante 19x12x39",
     "ladrillo_3": "Cerámico portante 19x19x33",
     "ladrillo_4": "Cerámico no portante 8x18x33",
     "ladrillo_5": "Cerámico no portante 18x18x33",
-    "ladrillo_6": "Bloque de hormigón 19x19x39",
+    "ladrillo_6": "Bloque de hormigón 19x19x39"
+}
+
+materiales = {
     "cemento": "Cemento (kg)",
     "cal": "Cal (kg)",
     "arena": "Arena (m³)",
@@ -74,8 +78,20 @@ nombres_materiales = {
 }
 
 nuevos_valores = {}
-for col, label in nombres_materiales.items():
-    nuevos_valores[col] = st.number_input(label, value=float(obra[col]), step=1.0)
+
+col1, col2 = st.columns(2)
+
+# Ladrillos en columna izquierda
+with col1:
+    st.markdown("#### 🧱 Ladrillos")
+    for col, label in ladrillos.items():
+        nuevos_valores[col] = st.number_input(label, value=float(obra[col]), step=1.0)
+
+# Materiales en columna derecha
+with col2:
+    st.markdown("#### 🪨 Materiales")
+    for col, label in materiales.items():
+        nuevos_valores[col] = st.number_input(label, value=float(obra[col]), step=1.0)
 
 if st.button("Guardar cambios en stock"):
     query = f"""
@@ -87,8 +103,9 @@ if st.button("Guardar cambios en stock"):
     conn.commit()
     st.success("✅ Stock actualizado correctamente.")
 
-    # Recargar obra
+    # Recargar obra actualizada
     obra = pd.read_sql("SELECT * FROM obras WHERE nombre_obra = ? AND usuario = ?", conn, params=[obra_seleccionada, usuario]).iloc[0]
+
 
 # --- Comparar con materiales estimados ---
 try:
