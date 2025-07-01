@@ -11,7 +11,7 @@ def get_img_as_base64(file_path):
         return base64.b64encode(f.read()).decode()
 
 # --- Usar imagen local como fondo ---
-img_base64 = get_img_as_base64("background.png")  # Usá la imagen que descargaste o generaste
+img_base64 = get_img_as_base64("..\background.png")  # Usá la imagen que descargaste o generaste
 
 # --- Estilo CSS para fondo completo ---
 page_bg_img = f"""
