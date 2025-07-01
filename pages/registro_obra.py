@@ -14,6 +14,11 @@ c = conn.cursor()
 def mostrar_formulario_obra():
     st.title("CIMIENTO FUTURO\n\n")
     st.subheader("Registro de Obra\n")
+    if st.session_state.get("logueado"):
+    if st.button("🚪 Cerrar sesión"):
+        st.session_state.clear()
+        st.query_params["page"] = "cuenta.py"
+        st.rerun()
 
     nombre_obra = st.text_input("🪧 Nombre de la obra")
 
