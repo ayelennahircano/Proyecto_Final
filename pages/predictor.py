@@ -14,6 +14,11 @@ if 'logueado' not in st.session_state or not st.session_state['logueado']:
 def app():
     st.title("CIMIENTO FUTURO\n\n")
     st.subheader("Modelo predictivo con IA para cálculo de materiales\n")
+    if st.session_state.get("logueado"):
+    if st.button("🚪 Cerrar sesión"):
+        st.session_state.clear()
+        st.query_params["page"] = "cuenta.py"
+        st.rerun()
 
     # Cargar modelo y columnas
     modelo_cargado = joblib.load("rf_model.pkl")
