@@ -18,33 +18,38 @@ def crear_tabla_usuarios():
     conn.commit()
     conn.close()
 
+def cifrar(password):
+    return sha256(password.encode()).hexdigest()
+
 def agregar_usuario(email, username, password):
     conn = sqlite3.connect("obras.db")
     c = conn.cursor()
-    c.execute("INSERT INTO usuarios (email, username, password) VALUES (?, ?, ?)", (email, username, password))
+    password_cifrada = cifrar(password)
+    c.execute("INSERT INTO usuarios (email, username, password) VALUES (?, ?, ?)", (email, username, password_cifrada))
     conn.commit()
     conn.close()
 
 def verificar_usuario(email, password):
     conn = sqlite3.connect("obras.db")
     c = conn.cursor()
-    c.execute("SELECT * FROM usuarios WHERE email = ? AND password = ?", (email, password))
+    password_cifrada = cifrar(password)
+    c.execute("SELECT * FROM usuarios WHERE email = ? AND password = ?", (email, password_cifrada))
     usuario = c.fetchone()
     conn.close()
     return usuario
 
-# --- Función de logout ---
+# --- Logout y expiración ---
 def logout():
     st.session_state.clear()
     st.query_params["page"] = "cuenta.py"
     st.rerun()
 
-# --- Expirar sesión tras 15 minutos ---
 def verificar_sesion():
-    tiempo_limite = 15 * 60  # 15 minutos
-    if st.session_state.get("logueado") and time.time() - st.session_state.get("login_time", 0) > tiempo_limite:
-        st.warning("🔒 Sesión expirada por inactividad.")
-        logout()
+    if st.session_state.get("logueado"):
+        tiempo_limite = 15 * 60  # 15 minutos
+        if time.time() - st.session_state.get("login_time", 0) > tiempo_limite:
+            st.warning("🔒 Sesión expirada por inactividad.")
+            logout()
 
 # --- Interfaz principal ---
 def app():
@@ -56,14 +61,19 @@ def app():
 Cimiento Futuro es una solución innovadora para la construcción basada en IA y ciencia de datos. Registrate para llevar control predictivo de tu obra.
 """)
 
-    # Si ya hay sesión, mostrar botón de logout
+    # --- Si ya hay sesión activa ---
     if st.session_state.get("logueado"):
-        st.success(f"Ya estás logueado como {st.session_state['usuario']}")
-        if st.button("🚪 Cerrar sesión"):
-            logout()
+        col1, col2 = st.columns([0.8, 0.2])
+        with col1:
+            st.success(f"✅ Logueado como: {st.session_state['usuario']}")
+        with col2:
+            st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
+            if st.button("🚪 Cerrar sesión"):
+                logout()
+            st.markdown("</div>", unsafe_allow_html=True)
         return
 
-    # Formulario de login/registro
+    # --- Formulario login / registro ---
     choice = st.selectbox('Login / Registro', ['Ingresar', 'Registrarse'])
 
     if choice == 'Ingresar':
@@ -92,5 +102,5 @@ Cimiento Futuro es una solución innovadora para la construcción basada en IA y
             except sqlite3.IntegrityError:
                 st.error("⚠️ Ya existe un usuario con ese correo")
 
-# Ejecutar
+# --- Ejecutar ---
 app()
