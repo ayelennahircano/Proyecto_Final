@@ -13,4 +13,3 @@ Pillow
 bcrypt
 xlsxwriter
 reportlab
-base64
