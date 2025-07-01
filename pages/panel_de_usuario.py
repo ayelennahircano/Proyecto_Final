@@ -176,6 +176,3 @@ with col_qr:
         st.warning("⚠️ No se pudo generar el QR.")
         st.text(str(qr_error))
 
-except Exception as e:
-    st.error("❌ No se pudo cargar el chat desde la hoja de Google.")
-    st.text(str(e))
