@@ -40,7 +40,7 @@ def descargar_modelo_drive(file_id):
     with open("rf_model.pkl", "wb") as f:
         f.write(response.content)
 if not os.path.exists("rf_model.pkl"):
-    descargar_modelo_drive("1ABCDEF1234567890") 
+    descargar_modelo_drive("16r6vq-IAL0l1QVV8k4Z4w4wJe3h8ouOe") 
 
 if not os.path.exists("rf_model.pkl"):
     with zipfile.ZipFile("rf_model.zip", "r") as zip_ref:
