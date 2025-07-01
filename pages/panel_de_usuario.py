@@ -7,26 +7,38 @@ import matplotlib.pyplot as plt
 import io
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+import time
 
-# --- URL del formulario y CSV público (reemplazá este URL con el real) ---
+# --- URL del formulario y CSV ---
 form_url = "https://docs.google.com/forms/d/e/1FAIpQLSePvL6mr9U5R1lfTnzP29w8X6782nrcrDAqcku0nsIktDYAzA/viewform?usp=header"
 csv_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTfBC1Q1v4jN3XS2rHZ1VqE8ksLt_J3qY5stWLWffGo85quwITxw4JIq_tCdllYpG1vaXAg6qfDBjvt/pub?gid=1178988507&single=true&output=csv"
 
-# --- Verificar sesión iniciada ---
+# --- Verificar sesión iniciada y expiración ---
 if "usuario" not in st.session_state:
     st.warning("⚠️ Debés iniciar sesión para ver el panel.")
     st.stop()
 
+# --- Verificar expiración ---
+if time.time() - st.session_state.get("login_time", 0) > 15 * 60:
+    st.warning("🔒 Sesión expirada por inactividad.")
+    st.session_state.clear()
+    st.query_params["page"] = "cuenta.py"
+    st.rerun()
+
 usuario = st.session_state["usuario"]
 
-st.title("CIMIENTO FUTURO\n\n")
-st.subheader("Panel del Usuario\n")
-
-if st.session_state.get("logueado"):
-    if st.button("🚪 Cerrar sesión"):
+# --- Título y logout ---
+col1, col2 = st.columns([0.8, 0.2])
+with col1:
+    st.title("CIMIENTO FUTURO")
+    st.subheader("Panel del Usuario")
+with col2:
+    st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
+    if st.button("Cerrar sesión"):
         st.session_state.clear()
         st.query_params["page"] = "cuenta.py"
         st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # --- Conexión a la base de datos ---
 conn = sqlite3.connect("obras.db", check_same_thread=False)
@@ -37,16 +49,16 @@ if obras.empty:
     st.info("No tenés obras registradas todavía.")
     st.stop()
 
-st.subheader("📋 Tus Obras Registradas")
+st.subheader("Tus Obras Registradas")
 st.dataframe(obras.set_index("nombre_obra"))
 
 # --- Selección de obra ---
-st.subheader("🔎 Analizar y modificar una obra")
+st.subheader("Analizar y modificar una obra")
 obra_seleccionada = st.selectbox("Elegí una obra:", obras["nombre_obra"].tolist())
 obra = obras[obras["nombre_obra"] == obra_seleccionada].iloc[0]
 
-# --- Modificar stock de materiales ---
-st.markdown("### 🛠️ Modificar stock de materiales")
+# --- Modificar stock ---
+st.markdown("### Modificar stock de materiales")
 
 nombres_materiales = {
     "ladrillo_1": "Ladrillo común 5x12x26",
@@ -75,7 +87,7 @@ if st.button("💾 Guardar cambios en stock"):
     conn.commit()
     st.success("✅ Stock actualizado correctamente.")
 
-    # Recargar datos actualizados
+    # Recargar obra
     obra = pd.read_sql("SELECT * FROM obras WHERE nombre_obra = ? AND usuario = ?", conn, params=[obra_seleccionada, usuario]).iloc[0]
 
 # --- Comparar con materiales estimados ---
@@ -83,7 +95,7 @@ try:
     tabla_pred = f"materiales_{obra_seleccionada.strip().replace(' ', '_').lower()}"
     pred = pd.read_sql(f"SELECT * FROM {tabla_pred}", conn)
     pred_totales = pred[["cantidad_ladrillos", "cemento_kg", "cal_kg", "arena_m3", "cemento_albañilería_kg"]].sum()
-    st.subheader("📊 Comparación con materiales estimados")
+    st.subheader("Comparación con materiales estimados")
     comparacion = pd.DataFrame({
         "Registrado": [
             obra["ladrillo_5"], obra["cemento"], obra["cal"], obra["arena"], obra["cemento_alba"]
@@ -118,7 +130,7 @@ try:
         st.session_state["mensajes_anteriores"] = 0
 
     if nuevos_mensajes > st.session_state["mensajes_anteriores"]:
-        st.success(f"📨 ¡Hay {nuevos_mensajes - st.session_state['mensajes_anteriores']} mensaje(s) nuevo(s) desde la obra!")
+        st.success(f"¡Hay {nuevos_mensajes - st.session_state['mensajes_anteriores']} mensaje(s) nuevo(s) desde la obra!")
     elif nuevos_mensajes == 0:
         st.info("No hay mensajes todavía.")
 
@@ -127,7 +139,7 @@ try:
     if not df_mensajes.empty:
         st.dataframe(df_mensajes)
 
-    st.subheader("✉️ Responder mensaje")
+    st.subheader("Responder mensaje")
     respuesta = st.text_area("Tu respuesta para el equipo")
     if st.button("📤 Enviar respuesta") and respuesta:
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -145,7 +157,7 @@ try:
         hoja_admin.append_row([usuario, obra_seleccionada, respuesta])
         st.success("✅ Respuesta enviada y registrada en la hoja.")
 
-    st.subheader("🔗 Compartir formulario con empleados")
+    st.subheader("Compartir formulario con empleados")
     try:
         qr = qrcode.make(form_url)
         buf = io.BytesIO()
