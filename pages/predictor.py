@@ -6,7 +6,7 @@ import time
 import zipfile
 import requests
 import os
-        
+
 # --- Verificar sesión ---
 if "usuario" not in st.session_state:
     st.warning("⚠️ Debés iniciar sesión para usar esta página.")
@@ -32,14 +32,12 @@ with col2:
         st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
 
-# --- Cargar modelo ---
 # --- Descargar modelo desde Drive o ZIP ---
 @st.cache_data
 def obtener_modelo_rf():
-    pkl_id = "16r6vq-IAL0l1QVV8k4Z4w4wJe3h8ouOe"  # ID real de rf_model.pkl
-    zip_id = "1bp40CPW6Pxp7_EXEDWGoO4G86goFwpfd"  # ⚠️ Reemplazalo por el ID real del ZIP si lo tenés
+    pkl_id = "16r6vq-IAL0l1QVV8k4Z4w4wJe3h8ouOe"
+    zip_id = "1bp40CPW6Pxp7_EXEDWGoO4G86goFwpfd"
 
-    # Paso 1: Descargar rf_model.pkl directamente
     if not os.path.exists("rf_model.pkl"):
         try:
             url = f"https://drive.google.com/uc?id={pkl_id}&export=download"
@@ -50,7 +48,6 @@ def obtener_modelo_rf():
         except Exception as e:
             st.warning(f"Error al descargar rf_model.pkl: {e}")
 
-    # Paso 2: Si no existe, intentar ZIP
     if not os.path.exists("rf_model.pkl") and not os.path.exists("rf_model.zip"):
         try:
             url = f"https://drive.google.com/uc?id={zip_id}&export=download"
@@ -61,7 +58,6 @@ def obtener_modelo_rf():
         except Exception as e:
             st.warning(f"Error al descargar rf_model.zip: {e}")
 
-    # Paso 3: Descomprimir ZIP si fue descargado
     if not os.path.exists("rf_model.pkl") and os.path.exists("rf_model.zip"):
         try:
             with zipfile.ZipFile("rf_model.zip", "r") as zip_ref:
@@ -71,13 +67,24 @@ def obtener_modelo_rf():
 
     return os.path.exists("rf_model.pkl")
 
-# Ejecutar descarga si es necesario
 modelo_listo = obtener_modelo_rf()
 if not modelo_listo:
     st.error("❌ No se pudo cargar el modelo. Verificá la conexión o el ID del archivo.")
     st.stop()
-        
-# --- Parámetros ---
+
+# --- Cargar modelo ---
+try:
+    modelo_cargado = joblib.load("rf_model.pkl")
+    if isinstance(modelo_cargado, tuple) and len(modelo_cargado) == 2:
+        modelo, columnas_entrenamiento = modelo_cargado
+    else:
+        st.error("❌ El modelo no contiene columnas de entrenamiento.")
+        st.stop()
+except Exception as e:
+    st.error(f"❌ Error al cargar el modelo: {e}")
+    st.stop()
+
+# --- Parámetros y estructura de materiales ---
 mezclas = ["Cemento + Cal + Arena", "Cemento de Albañilería + Arena"]
 tipos_ladrillo = [
     "Comun 5x12x26",
@@ -121,7 +128,7 @@ ancho = st.number_input("Ancho del muro (m)", min_value=0.5, value=4.0)
 tipo_mezcla = st.selectbox("Tipo de mezcla", mezclas)
 cantidad = st.number_input("Repetir cuántas veces este muro", min_value=1, value=1)
 
-if st.button("➕ Agregar muro"):
+if st.button("Agregar muro"):
     area = altura * ancho
     tipo_ladrillo_lower = tipo_ladrillo.lower().strip()
     X_nuevo = pd.DataFrame([{ 
@@ -158,22 +165,17 @@ if st.button("➕ Agregar muro"):
         "Cemento_albañilería (Kg)": round(cemento_alba * area * cantidad, 2)
     }])
 
-    st.success("✅ Resultados del muro agregado:")
     st.dataframe(df_resultado)
-
     csv = df_resultado.to_csv(index=False).encode('utf-8')
     st.download_button("Descargar resultados", csv, f"materiales_{obra}.csv", "text/csv")
 
-    # Guardar en SQLite
+    # Guardar en base de datos
     conn = sqlite3.connect("obras.db", check_same_thread=False)
     tabla_pred = f"materiales_{obra.strip().replace(' ', '_').lower()}"
     df_guardar = df_resultado.copy()
     df_guardar.columns = [col.lower().replace(" ", "_").replace("(", "").replace(")", "") for col in df_guardar.columns]
     df_guardar.to_sql(tabla_pred, conn, if_exists="append", index=False)
 
-    st.success("Predicción guardada en la base de datos.")
-
-    # Mostrar todos los muros
     st.subheader("Muros acumulados en esta obra")
     try:
         df_acumulado = pd.read_sql(f"SELECT * FROM {tabla_pred}", conn)
