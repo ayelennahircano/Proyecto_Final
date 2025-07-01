@@ -62,7 +62,7 @@ Cimiento Futuro es una solución innovadora para la construcción basada en IA y
             st.success(f"✅ Logueado como: {st.session_state['usuario']}")
         with col2:
             st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
-            if st.button("🚪 Cerrar sesión"):
+            if st.button("Cerrar sesión"):
                 logout()
             st.markdown("</div>", unsafe_allow_html=True)
         return
