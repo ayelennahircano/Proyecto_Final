@@ -4,7 +4,8 @@ import joblib
 import sqlite3
 import time
 import zipfile
-
+import requests
+import os
         
 # --- Verificar sesión ---
 if "usuario" not in st.session_state:
@@ -32,9 +33,24 @@ with col2:
     st.markdown("</div>", unsafe_allow_html=True)
 
 # --- Cargar modelo ---
+@st.cache_data
+def descargar_modelo_drive(file_id):
+    url = f"https://drive.google.com/uc?id={file_id}"
+    response = requests.get(url)
+    with open("rf_model.pkl", "wb") as f:
+        f.write(response.content)
 if not os.path.exists("rf_model.pkl"):
+    descargar_modelo_drive("1ABCDEF1234567890") 
+
+modelo_cargado = joblib.load("rf_model.pkl")
+# Descargá si no existe
+import os
+if not os.path.exists("rf_model.pkl"):
+    descargar_modelo_drive("1NDlWw08vQc3tQXmuuz5W_stsMW_9mY0c")  # <-- Reemplazá con tu ID real
+'''if not os.path.exists("rf_model.pkl"):
     with zipfile.ZipFile("rf_model.zip", "r") as zip_ref:
-        zip_ref.extractall()
+        zip_ref.extractall()'''
+
 modelo_cargado = joblib.load("rf_model.pkl")
 if isinstance(modelo_cargado, tuple) and len(modelo_cargado) == 2:
     modelo, columnas_entrenamiento = modelo_cargado
