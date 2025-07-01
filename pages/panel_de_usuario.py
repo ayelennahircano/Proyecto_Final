@@ -77,7 +77,7 @@ nuevos_valores = {}
 for col, label in nombres_materiales.items():
     nuevos_valores[col] = st.number_input(label, value=float(obra[col]), step=1.0)
 
-if st.button("💾 Guardar cambios en stock"):
+if st.button("Guardar cambios en stock"):
     query = f"""
     UPDATE obras
     SET {', '.join([f"{k} = ?" for k in nuevos_valores.keys()])}
@@ -116,9 +116,8 @@ except Exception as e:
     st.warning("⚠️ No se encontraron materiales estimados para esta obra.")
     st.text(str(e))
 
-# --- Chat desde Google Form ---
-st.subheader("💬 Comunicación con la obra")
-
+# --- Chat y QR en columnas ---
+st.subheader("\n\n💬 Comunicación con la obra")
 col_chat, col_qr = st.columns([0.65, 0.35])
 
 with col_chat:
@@ -172,7 +171,7 @@ with col_qr:
         buf = io.BytesIO()
         qr.save(buf)
         st.image(buf.getvalue(), caption="Escaneá este QR", width=250)
-        st.write(f"[➡️ Abrir formulario]({form_url})")
+        st.write(f"[Abrir formulario]({form_url})")
     except Exception as qr_error:
         st.warning("⚠️ No se pudo generar el QR.")
         st.text(str(qr_error))
