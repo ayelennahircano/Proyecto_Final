@@ -1,7 +1,6 @@
 import streamlit as st
 import sqlite3
 import time
-from hashlib import sha256
 
 # --- Funciones de base de datos ---
 def crear_tabla_usuarios():
@@ -18,22 +17,17 @@ def crear_tabla_usuarios():
     conn.commit()
     conn.close()
 
-'''def cifrar(password):
-    return sha256(password.encode()).hexdigest()'''
-
 def agregar_usuario(email, username, password):
     conn = sqlite3.connect("obras.db")
     c = conn.cursor()
-    password_cifrada = cifrar(password)
-    c.execute("INSERT INTO usuarios (email, username, password) VALUES (?, ?, ?)", (email, username, password_cifrada))
+    c.execute("INSERT INTO usuarios (email, username, password) VALUES (?, ?, ?)", (email, username, password))
     conn.commit()
     conn.close()
 
 def verificar_usuario(email, password):
     conn = sqlite3.connect("obras.db")
     c = conn.cursor()
-    password_cifrada = cifrar(password)
-    c.execute("SELECT * FROM usuarios WHERE email = ? AND password = ?", (email, password_cifrada))
+    c.execute("SELECT * FROM usuarios WHERE email = ? AND password = ?", (email, password))
     usuario = c.fetchone()
     conn.close()
     return usuario
