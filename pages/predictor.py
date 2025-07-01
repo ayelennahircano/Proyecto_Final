@@ -35,8 +35,8 @@ with col2:
 # --- Descargar modelo desde Drive o ZIP ---
 @st.cache_data
 def obtener_modelo_rf():
-    pkl_id = "16r6vq-IAL0l1QVV8k4Z4w4wJe3h8ouOe"
-    zip_id = "1bp40CPW6Pxp7_EXEDWGoO4G86goFwpfd"
+    pkl_id = "1HeyT0rzShDGlFdzyyXWh9lpSSFzP-2iH"
+    zip_id = "1Iw_9gT1CZziO_O-Z8XBFWoq2uQdZT3W4"
 
     if not os.path.exists("rf_model.pkl"):
         try:
