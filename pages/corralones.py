@@ -4,8 +4,8 @@ from bs4 import BeautifulSoup
 import pandas as pd
 
 st.set_page_config(page_title="Precios Corralones", layout="wide")
-st.title("CIMIENTO FUTURO\n\n")
-st.subheader("Comparador de Precios - Corralones\n")
+st.title("CIMIENTO FUTURO")
+st.subheader("Comparador de Precios - Corralones")
 
 # --- Cierre de sesión ---
 if st.session_state.get("logueado"):
@@ -90,4 +90,4 @@ else:
     st.dataframe(df)
 
     csv = df.to_csv(index=False).encode("utf-8")
-    st.download_button("Descargar CSV", csv, "productos_corralones.csv", "text/csv")
+    st.download_button("📥 Descargar CSV", csv, "productos_corralones.csv", "text/csv")
