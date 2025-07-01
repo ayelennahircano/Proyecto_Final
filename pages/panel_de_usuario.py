@@ -117,55 +117,64 @@ except Exception as e:
     st.text(str(e))
 
 # --- Chat desde Google Form ---
-st.subheader("💬 Mensajes recibidos desde la obra")
-try:
-    df_mensajes = pd.read_csv(csv_url)
-    columnas = df_mensajes.columns.str.lower()
-    if "obra" in columnas:
-        col_obra = df_mensajes.columns[columnas == "obra"][0]
-        df_mensajes = df_mensajes[df_mensajes[col_obra] == obra_seleccionada]
+st.subheader("💬 Comunicación con la obra")
 
-    nuevos_mensajes = len(df_mensajes)
-    if "mensajes_anteriores" not in st.session_state:
-        st.session_state["mensajes_anteriores"] = 0
+col_chat, col_qr = st.columns([0.65, 0.35])
 
-    if nuevos_mensajes > st.session_state["mensajes_anteriores"]:
-        st.success(f"¡Hay {nuevos_mensajes - st.session_state['mensajes_anteriores']} mensaje(s) nuevo(s) desde la obra!")
-    elif nuevos_mensajes == 0:
-        st.info("No hay mensajes todavía.")
+with col_chat:
+    try:
+        df_mensajes = pd.read_csv(csv_url)
+        columnas = df_mensajes.columns.str.lower()
+        if "obra" in columnas:
+            col_obra = df_mensajes.columns[columnas == "obra"][0]
+            df_mensajes = df_mensajes[df_mensajes[col_obra] == obra_seleccionada]
 
-    st.session_state["mensajes_anteriores"] = nuevos_mensajes
+        nuevos_mensajes = len(df_mensajes)
+        if "mensajes_anteriores" not in st.session_state:
+            st.session_state["mensajes_anteriores"] = 0
 
-    if not df_mensajes.empty:
-        st.dataframe(df_mensajes)
+        if nuevos_mensajes > st.session_state["mensajes_anteriores"]:
+            st.success(f"¡Hay {nuevos_mensajes - st.session_state['mensajes_anteriores']} mensaje(s) nuevo(s) desde la obra!")
+        elif nuevos_mensajes == 0:
+            st.info("No hay mensajes todavía.")
 
-    st.subheader("Responder mensaje")
-    respuesta = st.text_area("Tu respuesta para el equipo")
-    if st.button("📤 Enviar respuesta") and respuesta:
-        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        creds = ServiceAccountCredentials.from_json_keyfile_name("credenciales_google.json", scope)
-        client = gspread.authorize(creds)
+        st.session_state["mensajes_anteriores"] = nuevos_mensajes
 
-        hoja_admin = None
-        sheet = client.open_by_url(csv_url.replace("/pub?", "/edit?")).sheet1
-        try:
-            hoja_admin = client.open_by_url(csv_url.replace("/pub?", "/edit?")).worksheet("Respuestas_admin")
-        except:
-            hoja_admin = client.open_by_url(csv_url.replace("/pub?", "/edit?")).add_worksheet("Respuestas_admin", rows="1000", cols="3")
-            hoja_admin.append_row(["Usuario", "Obra", "Respuesta"])
+        if not df_mensajes.empty:
+            st.dataframe(df_mensajes)
 
-        hoja_admin.append_row([usuario, obra_seleccionada, respuesta])
-        st.success("✅ Respuesta enviada y registrada en la hoja.")
+        st.subheader("Responder mensaje")
+        respuesta = st.text_area("Tu respuesta para el equipo")
+        if st.button("Enviar respuesta") and respuesta:
+            scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+            creds = ServiceAccountCredentials.from_json_keyfile_name("credenciales_google.json", scope)
+            client = gspread.authorize(creds)
 
-    st.subheader("Compartir formulario con empleados")
+            hoja_admin = None
+            sheet = client.open_by_url(csv_url.replace("/pub?", "/edit?")).sheet1
+            try:
+                hoja_admin = client.open_by_url(csv_url.replace("/pub?", "/edit?")).worksheet("Respuestas_admin")
+            except:
+                hoja_admin = client.open_by_url(csv_url.replace("/pub?", "/edit?")).add_worksheet("Respuestas_admin", rows="1000", cols="3")
+                hoja_admin.append_row(["Usuario", "Obra", "Respuesta"])
+
+            hoja_admin.append_row([usuario, obra_seleccionada, respuesta])
+            st.success("✅ Respuesta enviada y registrada en la hoja.")
+
+    except Exception as e:
+        st.error("❌ No se pudo cargar el chat desde la hoja de Google.")
+        st.text(str(e))
+
+with col_qr:
+    st.subheader("Compartir Formulario")
     try:
         qr = qrcode.make(form_url)
         buf = io.BytesIO()
         qr.save(buf)
-        st.image(buf.getvalue(), caption="Escaneá este QR para abrir el formulario", width=250)
-        st.write(f"[➡️ Abrir formulario en otra pestaña]({form_url})")
+        st.image(buf.getvalue(), caption="Escaneá este QR", width=250)
+        st.write(f"[➡️ Abrir formulario]({form_url})")
     except Exception as qr_error:
-        st.warning("⚠️ No se pudo generar el QR del formulario.")
+        st.warning("⚠️ No se pudo generar el QR.")
         st.text(str(qr_error))
 
 except Exception as e:
