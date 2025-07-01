@@ -22,6 +22,12 @@ usuario = st.session_state["usuario"]
 st.title("CIMIENTO FUTURO\n\n")
 st.subheader("Panel del Usuario\n")
 
+if st.session_state.get("logueado"):
+    if st.button("🚪 Cerrar sesión"):
+        st.session_state.clear()
+        st.query_params["page"] = "cuenta.py"
+        st.rerun()
+
 # --- Conexión a la base de datos ---
 conn = sqlite3.connect("obras.db", check_same_thread=False)
 
