@@ -15,13 +15,13 @@ if st.session_state.get("logueado"):
         st.rerun()
 
 # ---------- PARÁMETROS ----------
-sitios = ["Easy", "ElAmigo", "Orlandisa"]
-sitio = st.sidebar.selectbox("Seleccioná el corralón", sitios)
-paginas = st.sidebar.slider("Número de páginas a scrapear", 1, 5, 2)
+sitios_opciones = ["Easy", "ElAmigo", "Orlandisa"]
+sitios_seleccionados = st.sidebar.multiselect("Seleccioná los corralones", sitios_opciones, default=sitios_opciones)
+busqueda = st.sidebar.text_input("🔍 Buscar producto (ej: cemento, hierro)").strip().lower()
 
-# ---------- SCRAPERS ACTUALIZADOS ----------
+# ---------- SCRAPERS ----------
 @st.cache_data(show_spinner="Cargando productos...")
-def scrappear(sitio, paginas):
+def scrappear_sitio(sitio, paginas=3):
     productos = []
     headers = {"User-Agent": "Mozilla/5.0"}
 
@@ -75,19 +75,26 @@ def scrappear(sitio, paginas):
 
     return pd.DataFrame(productos)
 
-# ---------- EJECUTAR SCRAPER ----------
-df = scrappear(sitio, paginas)
+# ---------- CARGA MULTISITIO ----------
+dfs = [scrappear_sitio(sitio) for sitio in sitios_seleccionados]
+df_completo = pd.concat(dfs, ignore_index=True)
 
-# ---------- RESULTADOS ----------
-if df.empty:
-    st.warning("⚠️ No se encontraron productos. Probá con otro sitio o más páginas.")
+# ---------- FILTROS ----------
+if df_completo.empty:
+    st.warning("⚠️ No se encontraron productos. Probá con otros sitios.")
 else:
-    tiendas_disponibles = df["Tienda"].unique().tolist()
+    # Filtro por palabra clave
+    if busqueda:
+        df_completo = df_completo[df_completo["Producto"].str.lower().str.contains(busqueda)]
+
+    # Filtro por tienda
+    tiendas_disponibles = df_completo["Tienda"].unique().tolist()
     filtro = st.sidebar.multiselect("Filtrar por tienda", tiendas_disponibles, default=tiendas_disponibles)
-    df = df[df["Tienda"].isin(filtro)]
+    df_filtrado = df_completo[df_completo["Tienda"].isin(filtro)]
 
-    st.success(f"✅ Se encontraron {len(df)} productos.")
-    st.dataframe(df)
+    st.success(f"✅ Se encontraron {len(df_filtrado)} productos.")
+    st.dataframe(df_filtrado)
 
-    csv = df.to_csv(index=False)
-    st.download_button("📥 Descargar CSV", csv, f"productos_{sitio.lower()}.csv", "text/csv")
+    # Botón de descarga
+    csv = df_filtrado.to_csv(index=False)
+    st.download_button("Descargar CSV", csv, "productos_combinados.csv", "text/csv")
