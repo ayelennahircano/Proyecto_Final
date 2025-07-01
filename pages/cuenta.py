@@ -2,31 +2,6 @@ import streamlit as st
 import sqlite3
 from hashlib import sha256
 
-# --- Barra de navegación si el usuario está logueado ---
-if st.session_state.get("logueado"):
-    st.markdown("""
-    <style>
-    .nav-bar {
-        background-color: #f0f2f6;
-        padding: 10px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-    }
-    .nav-bar a {
-        margin-right: 20px;
-        text-decoration: none;
-        font-weight: bold;
-        color: #3366cc;
-    }
-    </style>
-    <div class="nav-bar">
-        <a href="/Corralones" target="_self">Corralones</a>
-        <a href="/panel_de_usuario" target="_self">Panel de usuario</a>
-        <a href="/registro_obra" target="_self">Registro de obra</a>
-        <a href="/predictor" target="_self">Cálculo de materiales</a>
-    </div>
-    """, unsafe_allow_html=True)
-
 # --- Funciones de base de datos ---
 def crear_tabla_usuarios():
     conn = sqlite3.connect("obras.db")
