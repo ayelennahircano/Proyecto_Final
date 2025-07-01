@@ -26,7 +26,7 @@ def mostrar_formulario_obra():
         st.subheader("Registro de Obra")
     with col2:
         st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
-        if st.button("🚪 Cerrar sesión"):
+        if st.button("Cerrar sesión"):
             st.session_state.clear()
             st.query_params["page"] = "cuenta.py"
             st.rerun()
