@@ -5,9 +5,6 @@ import sqlite3
 import time
 import zipfile
 
-if not os.path.exists("rf_model.pkl"):
-    with zipfile.ZipFile("rf_model.zip", "r") as zip_ref:
-        zip_ref.extractall()
         
 # --- Verificar sesión ---
 if "usuario" not in st.session_state:
@@ -35,6 +32,9 @@ with col2:
     st.markdown("</div>", unsafe_allow_html=True)
 
 # --- Cargar modelo ---
+if not os.path.exists("rf_model.pkl"):
+    with zipfile.ZipFile("rf_model.zip", "r") as zip_ref:
+        zip_ref.extractall()
 modelo_cargado = joblib.load("rf_model.pkl")
 if isinstance(modelo_cargado, tuple) and len(modelo_cargado) == 2:
     modelo, columnas_entrenamiento = modelo_cargado
