@@ -9,20 +9,11 @@ if 'logueado' not in st.session_state or not st.session_state['logueado']:
     st.error("⚠️ Acceso denegado. Por favor iniciá sesión primero desde la página principal.")
     st.stop()
 
-# --- Barra de navegación ---
-st.markdown("""
-<nav style="background-color:#f0f2f6;padding:10px;border-radius:10px;">
-    <a href="/Corralones" target="_self" style="margin-right:20px;font-weight:bold;">Corralones</a>
-    <a href="/Panel_de_usuario" target="_self" style="margin-right:20px;font-weight:bold;">Panel de usuario</a>
-    <a href="/Registro_obra" target="_self" style="margin-right:20px;font-weight:bold;">Registro de obra</a>
-    <a href="/Predictor" target="_self" style="font-weight:bold;">Cálculo de materiales</a>
-</nav>
-""", unsafe_allow_html=True)
 
 # --- App principal ---
 def app():
-    st.title("CIMIENTO FUTURO")
-    st.subheader("Modelo predictivo con IA para cálculo de materiales")
+    st.title("CIMIENTO FUTURO\n\n")
+    st.subheader("Modelo predictivo con IA para cálculo de materiales\n")
 
     # Cargar modelo y columnas
     modelo_cargado = joblib.load("rf_model.pkl")
