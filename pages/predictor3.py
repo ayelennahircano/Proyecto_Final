@@ -9,15 +9,6 @@ if 'logueado' not in st.session_state or not st.session_state['logueado']:
     st.error("⚠️ Acceso denegado. Por favor iniciá sesión primero desde la página principal.")
     st.stop()
 
-# --- Barra de navegación ---
-st.markdown("""
-<nav style="background-color:#f0f2f6;padding:10px;border-radius:10px;">
-    <a href="/Corralones" target="_self" style="margin-right:20px;font-weight:bold;">Corralones</a>
-    <a href="/Panel_de_usuario" target="_self" style="margin-right:20px;font-weight:bold;">Panel de usuario</a>
-    <a href="/Registro_obra" target="_self" style="margin-right:20px;font-weight:bold;">Registro de obra</a>
-    <a href="/Predictor" target="_self" style="font-weight:bold;">Cálculo de materiales</a>
-</nav>
-""", unsafe_allow_html=True)
 
 # --- App principal ---
 def app():
@@ -77,7 +68,7 @@ def app():
     tipo_mezcla = st.selectbox("Tipo de mezcla", mezclas)
     cantidad = st.number_input("Repetir cuántas veces este muro", min_value=1, value=1)
 
-    if st.button("➕ Agregar muro"):
+    if st.button("Agregar muro"):
         area = altura * ancho
         tipo_ladrillo_lower = tipo_ladrillo.lower().strip()
         X_nuevo = pd.DataFrame([{ 
@@ -118,7 +109,7 @@ def app():
         st.dataframe(df_resultado)
 
         csv = df_resultado.to_csv(index=False).encode('utf-8')
-        st.download_button("📥 Descargar resultados", csv, f"materiales_{obra}.csv", "text/csv")
+        st.download_button("Descargar resultados", csv, f"materiales_{obra}.csv", "text/csv")
 
         
         # Conexión a la base de datos
@@ -136,7 +127,7 @@ def app():
 
         st.success("Predicción guardada correctamente en la base de datos.")
         # --- Mostrar todos los muros guardados para la obra actual ---
-        st.subheader("📋 Muros acumulados en esta obra")
+        st.subheader("Muros acumulados en esta obra")
 
         try:
             df_acumulado = pd.read_sql(f"SELECT * FROM {tabla_pred}", conn)
@@ -144,7 +135,7 @@ def app():
 
             # --- Botón para descargar todos los muros ---
             csv_total = df_acumulado.to_csv(index=False).encode('utf-8')
-            st.download_button("📥 Descargar todos los muros", csv_total, f"todos_los_muros_{obra}.csv", "text/csv")
+            st.download_button("Descargar todos los muros", csv_total, f"todos_los_muros_{obra}.csv", "text/csv")
         except Exception as e:
             st.warning("⚠️ No se pudieron mostrar los muros acumulados.")
             st.text(str(e))
