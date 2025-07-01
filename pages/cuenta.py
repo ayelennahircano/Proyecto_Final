@@ -18,8 +18,8 @@ def crear_tabla_usuarios():
     conn.commit()
     conn.close()
 
-def cifrar(password):
-    return sha256(password.encode()).hexdigest()
+'''def cifrar(password):
+    return sha256(password.encode()).hexdigest()'''
 
 def agregar_usuario(email, username, password):
     conn = sqlite3.connect("obras.db")
