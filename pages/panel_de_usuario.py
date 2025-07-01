@@ -83,13 +83,13 @@ col1, col2 = st.columns(2)
 
 # Ladrillos en columna izquierda
 with col1:
-    st.markdown("#### 🧱 Ladrillos")
+    st.markdown("#### Ladrillos")
     for col, label in ladrillos.items():
         nuevos_valores[col] = st.number_input(label, value=float(obra[col]), step=1.0)
 
 # Materiales en columna derecha
 with col2:
-    st.markdown("#### 🪨 Materiales")
+    st.markdown("#### Materiales")
     for col, label in materiales.items():
         nuevos_valores[col] = st.number_input(label, value=float(obra[col]), step=1.0)
 
