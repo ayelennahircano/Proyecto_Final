@@ -1,7 +1,7 @@
+streamlit
 bcrypt
 xlsxwriter
 reportlab
-streamlit
 pandas
 matplotlib
 qrcode
@@ -11,3 +11,5 @@ oauth2client
 numpy
 requests
 beautifulsoup4
+scikit-learn
+joblib
