@@ -23,7 +23,7 @@ with col1:
     st.subheader("Modelo predictivo de materiales con IA")
 with col2:
     st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
-    if st.button("🚪 Cerrar sesión"):
+    if st.button("Cerrar sesión"):
         st.session_state.clear()
         st.query_params["page"] = "cuenta.py"
         st.rerun()
@@ -122,7 +122,7 @@ if st.button("➕ Agregar muro"):
     st.dataframe(df_resultado)
 
     csv = df_resultado.to_csv(index=False).encode('utf-8')
-    st.download_button("📥 Descargar resultados", csv, f"materiales_{obra}.csv", "text/csv")
+    st.download_button("Descargar resultados", csv, f"materiales_{obra}.csv", "text/csv")
 
     # Guardar en SQLite
     conn = sqlite3.connect("obras.db", check_same_thread=False)
@@ -131,15 +131,15 @@ if st.button("➕ Agregar muro"):
     df_guardar.columns = [col.lower().replace(" ", "_").replace("(", "").replace(")", "") for col in df_guardar.columns]
     df_guardar.to_sql(tabla_pred, conn, if_exists="append", index=False)
 
-    st.success("📦 Predicción guardada en la base de datos.")
+    st.success("Predicción guardada en la base de datos.")
 
     # Mostrar todos los muros
-    st.subheader("📋 Muros acumulados en esta obra")
+    st.subheader("Muros acumulados en esta obra")
     try:
         df_acumulado = pd.read_sql(f"SELECT * FROM {tabla_pred}", conn)
         st.dataframe(df_acumulado)
         csv_total = df_acumulado.to_csv(index=False).encode('utf-8')
-        st.download_button("📥 Descargar todos los muros", csv_total, f"todos_los_muros_{obra}.csv", "text/csv")
+        st.download_button("Descargar todos los muros", csv_total, f"todos_los_muros_{obra}.csv", "text/csv")
     except Exception as e:
         st.warning("⚠️ No se pudieron mostrar los muros acumulados.")
         st.text(str(e))
