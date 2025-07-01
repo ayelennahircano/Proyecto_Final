@@ -44,9 +44,9 @@ if not os.path.exists("rf_model.pkl"):
 
 modelo_cargado = joblib.load("rf_model.pkl")
 # Descargá si no existe
-import os
+
 if not os.path.exists("rf_model.pkl"):
-    descargar_modelo_drive("1NDlWw08vQc3tQXmuuz5W_stsMW_9mY0c")  # <-- Reemplazá con tu ID real
+    descargar_modelo_drive("16r6vq-IAL0l1QVV8k4Z4w4wJe3h8ouOe")  # <-- Reemplazá con tu ID real
 '''if not os.path.exists("rf_model.pkl"):
     with zipfile.ZipFile("rf_model.zip", "r") as zip_ref:
         zip_ref.extractall()'''
