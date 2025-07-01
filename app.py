@@ -3,48 +3,38 @@ import base64
 import os
 import time
 
-# --- CONFIGURACIÓN GENERAL ---
+# Configuración de la página
 st.set_page_config(page_title="Cimiento Futuro", layout="wide")
 
-# --- FUNCIONES ---
-
-@st.cache_data
-def get_img_as_base64(file_path):
-    with open(file_path, "rb") as f:
-        return base64.b64encode(f.read()).decode()
-
-# --- APLICAR FONDO GLOBAL ---
-if os.path.exists("background.png"):
-    img_base64 = get_img_as_base64("background.png")
-
-    page_bg_img = f"""
+# --- FONDO GLOBAL ---
+def set_background_from_local(png_file):
+    with open(png_file, "rb") as f:
+        encoded = base64.b64encode(f.read()).decode()
+    css = f"""
     <style>
-    [data-testid="stAppViewContainer"] > .main {{
-        background-image: url("data:image/png;base64,{img_base64}");
+    section.main {{
+        background-image: url("data:image/png;base64,{encoded}");
         background-size: cover;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
         background-position: center;
+        background-attachment: fixed;
     }}
 
-    [data-testid="stSidebar"] > div:first-child {{
-        background-color: rgba(255, 255, 255, 0.85);
-        padding-top: 2rem;
-        padding-bottom: 2rem;
+    div[data-testid="stSidebarContent"] {{
+        background-color: rgba(255,255,255,0.9);
         border-radius: 10px;
-        margin: 1rem;
+        padding: 1rem;
     }}
 
-    [data-testid="stHeader"] {{
+    header[data-testid="stHeader"] {{
         background: transparent;
-    }}
-
-    [data-testid="stToolbar"] {{
-        right: 2rem;
     }}
     </style>
     """
-    st.markdown(page_bg_img, unsafe_allow_html=True)
+    st.markdown(css, unsafe_allow_html=True)
+
+# --- Aplicar fondo si existe ---
+if os.path.exists("background.png"):
+    set_background_from_local("background.png")
 
 # --- SESIÓN Y EXPIRACIÓN ---
 if "usuario" in st.session_state:
