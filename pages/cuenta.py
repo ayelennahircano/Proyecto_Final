@@ -1,5 +1,6 @@
 import streamlit as st
 import sqlite3
+import time
 from hashlib import sha256
 
 # --- Funciones de base de datos ---
@@ -32,14 +33,37 @@ def verificar_usuario(email, password):
     conn.close()
     return usuario
 
+# --- Función de logout ---
+def logout():
+    st.session_state.clear()
+    st.query_params["page"] = "cuenta.py"
+    st.rerun()
+
+# --- Expirar sesión tras 15 minutos ---
+def verificar_sesion():
+    tiempo_limite = 15 * 60  # 15 minutos
+    if st.session_state.get("logueado") and time.time() - st.session_state.get("login_time", 0) > tiempo_limite:
+        st.warning("🔒 Sesión expirada por inactividad.")
+        logout()
+
 # --- Interfaz principal ---
 def app():
     crear_tabla_usuarios()
+    verificar_sesion()
+
     st.title("CIMIENTO FUTURO")
     st.markdown("""
 Cimiento Futuro es una solución innovadora para la construcción basada en IA y ciencia de datos. Registrate para llevar control predictivo de tu obra.
 """)
 
+    # Si ya hay sesión, mostrar botón de logout
+    if st.session_state.get("logueado"):
+        st.success(f"Ya estás logueado como {st.session_state['usuario']}")
+        if st.button("🚪 Cerrar sesión"):
+            logout()
+        return
+
+    # Formulario de login/registro
     choice = st.selectbox('Login / Registro', ['Ingresar', 'Registrarse'])
 
     if choice == 'Ingresar':
@@ -49,8 +73,9 @@ Cimiento Futuro es una solución innovadora para la construcción basada en IA y
             usuario = verificar_usuario(email, password)
             if usuario:
                 st.success(f"Bienvenido/a {usuario[2]}")
-                st.session_state['usuario'] = usuario[2]  # username
+                st.session_state['usuario'] = usuario[2]
                 st.session_state['logueado'] = True
+                st.session_state['login_time'] = time.time()
                 st.query_params["page"] = "corralones"
                 st.rerun()
             else:
@@ -67,4 +92,5 @@ Cimiento Futuro es una solución innovadora para la construcción basada en IA y
             except sqlite3.IntegrityError:
                 st.error("⚠️ Ya existe un usuario con ese correo")
 
+# Ejecutar
 app()
