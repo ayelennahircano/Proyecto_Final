@@ -1,88 +1,68 @@
-import streamlit as st
-import pandas as pd
-import joblib
-import sqlite3
-import time
+import os
 import zipfile
 import requests
-import os
+import joblib
+import streamlit as st
 
-# --- Verificar sesión ---
-if "usuario" not in st.session_state:
-    st.warning("⚠️ Debés iniciar sesión para usar esta página.")
-    st.stop()
+# Ruta base del proyecto (donde está app.py)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ruta_modelo = os.path.join(BASE_DIR, "rf_model.pkl")
+ruta_zip = os.path.join(BASE_DIR, "rf_model.zip")
 
-# --- Verificar expiración ---
-if time.time() - st.session_state.get("login_time", 0) > 15 * 60:
-    st.warning("🔒 Sesión expirada por inactividad.")
-    st.session_state.clear()
-    st.query_params["page"] = "cuenta.py"
-    st.rerun()
-
-# --- Título y logout ---
-col1, col2 = st.columns([0.8, 0.2])
-with col1:
-    st.title("CIMIENTO FUTURO")
-    st.subheader("Modelo predictivo de materiales con IA")
-with col2:
-    st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
-    if st.button("Cerrar sesión"):
-        st.session_state.clear()
-        st.query_params["page"] = "cuenta.py"
-        st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# --- Descargar modelo desde Drive o ZIP ---
 @st.cache_data
 def obtener_modelo_rf():
     pkl_id = "1HeyT0rzShDGlFdzyyXWh9lpSSFzP-2iH"
     zip_id = "1Iw_9gT1CZziO_O-Z8XBFWoq2uQdZT3W4"
 
-    if not os.path.exists("rf_model.pkl"):
+    # Paso 1: Descargar .pkl directamente si no existe
+    if not os.path.exists(ruta_modelo):
         try:
             url = f"https://drive.google.com/uc?id={pkl_id}&export=download"
             r = requests.get(url, allow_redirects=True, timeout=10)
             if r.ok and len(r.content) > 1000:
-                with open("rf_model.pkl", "wb") as f:
+                with open(ruta_modelo, "wb") as f:
                     f.write(r.content)
         except Exception as e:
-            st.warning(f"Error al descargar rf_model.pkl: {e}")
+            st.warning(f"⚠️ Error al descargar rf_model.pkl: {e}")
 
-    if not os.path.exists("rf_model.pkl") and not os.path.exists("rf_model.zip"):
+    # Paso 2: Si no está el .pkl, intentar ZIP
+    if not os.path.exists(ruta_modelo) and not os.path.exists(ruta_zip):
         try:
             url = f"https://drive.google.com/uc?id={zip_id}&export=download"
             r = requests.get(url, allow_redirects=True, timeout=15)
             if r.ok and len(r.content) > 1000:
-                with open("rf_model.zip", "wb") as f:
+                with open(ruta_zip, "wb") as f:
                     f.write(r.content)
         except Exception as e:
-            st.warning(f"Error al descargar rf_model.zip: {e}")
+            st.warning(f"⚠️ Error al descargar rf_model.zip: {e}")
 
-    if not os.path.exists("rf_model.pkl") and os.path.exists("rf_model.zip"):
+    # Paso 3: Descomprimir ZIP si existe y no hay .pkl
+    if not os.path.exists(ruta_modelo) and os.path.exists(ruta_zip):
         try:
-            with zipfile.ZipFile("rf_model.zip", "r") as zip_ref:
-                zip_ref.extractall()
+            with zipfile.ZipFile(ruta_zip, "r") as zip_ref:
+                zip_ref.extractall(BASE_DIR)
         except Exception as e:
-            st.warning(f"Error al descomprimir ZIP: {e}")
+            st.warning(f"⚠️ Error al descomprimir ZIP: {e}")
 
-    return os.path.exists("rf_model.pkl")
+    return os.path.exists(ruta_modelo), ruta_modelo
 
-modelo_listo = obtener_modelo_rf()
+# --- Descargar y cargar modelo ---
+modelo_listo, ruta_modelo = obtener_modelo_rf()
 if not modelo_listo:
     st.error("❌ No se pudo cargar el modelo. Verificá la conexión o el ID del archivo.")
     st.stop()
 
-# --- Cargar modelo ---
 try:
-    modelo_cargado = joblib.load("rf_model.pkl")
+    modelo_cargado = joblib.load(ruta_modelo)
     if isinstance(modelo_cargado, tuple) and len(modelo_cargado) == 2:
         modelo, columnas_entrenamiento = modelo_cargado
     else:
-        st.error("❌ El modelo no contiene columnas de entrenamiento.")
+        st.error("❌ El archivo rf_model.pkl no contiene un modelo y columnas de entrenamiento.")
         st.stop()
 except Exception as e:
     st.error(f"❌ Error al cargar el modelo: {e}")
     st.stop()
+
 
 # --- Parámetros y estructura de materiales ---
 mezclas = ["Cemento + Cal + Arena", "Cemento de Albañilería + Arena"]
